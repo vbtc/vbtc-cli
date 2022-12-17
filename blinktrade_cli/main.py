@@ -38,7 +38,8 @@ class BlinkTradeCli(object):
         if broker_id is None:
             self._broker_id = int(os.getenv('BLINKTRADE_API_BROKER_ID', "11"))
 
-    def _underscore_to_blinktrade_message_case(self, value):
+    @staticmethod
+    def _underscore_to_blinktrade_message_case(value):
         def camelcase():
             while True:
                 yield str.capitalize
@@ -52,7 +53,12 @@ class BlinkTradeCli(object):
 
         dt = datetime.datetime.now()
         nonce = str(int((time.mktime(dt.timetuple()) + dt.microsecond / 1000000.0) * 1000000))
-        signature = hmac.new(self._secret, nonce, digestmod=hashlib.sha256).hexdigest()
+        signature = hmac.new(
+            str(self._secret).encode(),
+            str(nonce).encode(),
+            digestmod=hashlib.sha256
+        ).hexdigest()
+
         headers = {
             'user-agent': 'blinktrade_tools/0.1',
             'Content-Type': 'application/json',
@@ -68,15 +74,15 @@ class BlinkTradeCli(object):
 
         url = '%s/tapi/%s/message' % (blinktrade_api_url, BLINKTRADE_API_VERSION)
 
-        print >> sys.stderr, msg
+        print(sys.stderr, msg)
         if self._verbose:
-            print >> sys.stderr, msg
+            print(sys.stderr, msg)
 
         try:
             response = requests.post(url, json=msg, verify=True, headers=headers, timeout=TIMEOUT_IN_SECONDS)
             if response.status_code == 200:
                 return response.json()
-        except Exception, e:
+        except Exception as e:
             print(str(e))
             raise e
 
@@ -101,7 +107,7 @@ class BlinkTradeCli(object):
             api_response = self.send_message(msg)
             if api_response['Status'] != 200:
                 if self._verbose:
-                    print >> sys.stderr, api_response
+                    print(sys.stderr, api_response)
                 return res
 
             api_responses = api_response['Responses']
@@ -151,11 +157,11 @@ class BlinkTradeCli(object):
     def _handle_response(self, api_response, msg_type):
         if api_response['Status'] != 200:
             if self._show_header:
-                print '"Error","Description","Details"'
-            print json.dumps([
+                print('"Error","Description","Details"')
+            print(json.dumps([
                 api_response["Status"],
                 api_response["Description"],
-                api_response["Detail"] if "Detail" in api_response else ""])[1:-1]
+                api_response["Detail"] if "Detail" in api_response else ""])[1:-1])
             return
 
         for response in api_response["Responses"]:
@@ -166,14 +172,14 @@ class BlinkTradeCli(object):
 
     def _printout_deposit_address_response(self, response):
         if self._show_header:
-            print '"DepositID", "InputAddress", "State", "CreditProvided", "Value", "PaidValue"'
-        print json.dumps([response["DepositID"],
+            print('"DepositID", "InputAddress", "State", "CreditProvided", "Value", "PaidValue"')
+        print(json.dumps([response["DepositID"],
                           response["Data"]["InputAddress"],
                           response["State"],
                           response["CreditProvided"] / 1e8,
                           response["Value"] / 1e8,
                           response["PaidValue"] / 1e8
-                          ])[1:-1]
+                          ])[1:-1])
 
     def create_bitcoin_deposit_address(self):
         requestId = random.randint(1, 100000)
@@ -210,9 +216,9 @@ class BlinkTradeCli(object):
 
     def _printout_result(self, res_header, res_body):
         if self._show_header:
-            print json.dumps(res_header)[1:-1]
+            print(json.dumps(res_header)[1:-1])
         for line in res_body:
-            print json.dumps(line, default=json_serial)[1:-1]
+            print(json.dumps(line, default=json_serial)[1:-1])
 
     def _extract_user_verification_data(self, rec, verification_data_field="VerificationData"):
         name = None
@@ -235,7 +241,7 @@ class BlinkTradeCli(object):
                         if 'blinktrade_device_id_checker' == d['verification']['service_provider'] and \
                                 'yes' == d['verification']['match_other_accounts']:
                             has_shared_device_with_other_accounts = True
-                            for user_data_key, user_data_value in d.iteritems():
+                            for user_data_key, user_data_value in d.items():
                                 if user_data_key == 'verification':
                                     continue
                                 for other_account in user_data_value:
@@ -294,7 +300,7 @@ class BlinkTradeCli(object):
 
         for rec in user_list:
             if self._verbose == 1:
-                print >> sys.stderr, rec
+                print(sys.stderr, rec)
 
             verification_data = self._extract_user_verification_data(rec)
             if rec["Username"] in verification_data["OtherAccounts"]:
@@ -326,7 +332,7 @@ class BlinkTradeCli(object):
         records = []
         for rec in deposit_list:
             if self._verbose == 1:
-                print  >> sys.stderr, rec
+                print(sys.stderr, rec)
 
             name = ""
             if "UserVerificationData" in rec and rec["UserVerificationData"] is not None:
@@ -404,7 +410,7 @@ class BlinkTradeCli(object):
                 receipt
             ]
             if self._verbose:
-                print  >> sys.stderr, rec
+                print(sys.stderr, rec)
             records.append(rec)
 
         return ['ID',
@@ -520,7 +526,7 @@ class BlinkTradeCli(object):
                 rec["Status"]
             ]
             if self._verbose:
-                print  >> sys.stderr, rec
+                print(sys.stderr, rec)
             records.append(rec)
 
         headers = ['ID', 'Created', 'LastUpdate', 'Method', 'Username', 'BankNumber', 'BankCity', 'RecipientPhoneNumber',

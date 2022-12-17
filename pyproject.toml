@@ -8,8 +8,8 @@ homepage = "https://github.com/blinktrade/blinktrade-cli"
 license="GPL-3.0-or-later"
 
 [tool.poetry.dependencies]
-python = "^2.7"
-requests = "~2.27.1"
+python = "^3.8, <3.11"
+requests = "~2.28.1"
 fire = "*"
 
 [tool.poetry.dev-dependencies]
