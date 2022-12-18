@@ -123,7 +123,7 @@ class BlinkTradeCli(object):
                         if self._verbose:
                             print (array_record)
 
-                        record = dict(zip(response['Columns'], array_record))
+                        record = dict(list(zip(response['Columns'], array_record)))
                         res.insert(0, record)
         return res
 
@@ -241,7 +241,7 @@ class BlinkTradeCli(object):
                         if 'blinktrade_device_id_checker' == d['verification']['service_provider'] and \
                                 'yes' == d['verification']['match_other_accounts']:
                             has_shared_device_with_other_accounts = True
-                            for user_data_key, user_data_value in d.items():
+                            for user_data_key, user_data_value in list(d.items()):
                                 if user_data_key == 'verification':
                                     continue
                                 for other_account in user_data_value:
@@ -263,7 +263,7 @@ class BlinkTradeCli(object):
                     phone_number = d["phone_number"]
 
                 if "identification" in d:
-                    identification = d["identification"].values()[0]
+                    identification = list(d["identification"].values())[0]
 
                 if "date_of_birth" in d:
                     date_of_birth = d["date_of_birth"]
@@ -352,7 +352,7 @@ class BlinkTradeCli(object):
             if "UserVerificationData" in rec and rec["UserVerificationData"] is not None:
                 for d in rec["UserVerificationData"]:
                     if "identification" in d:
-                        identification = d["identification"].values()[0]
+                        identification = list(d["identification"].values())[0]
                         break
 
             receipt = ""
